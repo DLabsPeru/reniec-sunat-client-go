@@ -20,10 +20,12 @@ type Option func(*Client)
 
 const DefaultBaseURL = "https://api-reniec-sunat.destiny-peru.com"
 
+// New creates a client using the production microservice base URL.
 func New(opts ...Option) *Client {
 	return NewWithBaseURL(DefaultBaseURL, opts...)
 }
 
+// NewWithBaseURL creates a client pointing to a custom base URL.
 func NewWithBaseURL(baseURL string, opts ...Option) *Client {
 	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
 	if baseURL == "" {
@@ -48,6 +50,7 @@ func NewWithBaseURL(baseURL string, opts ...Option) *Client {
 	return client
 }
 
+// WithHTTPClient replaces the default HTTP client.
 func WithHTTPClient(httpClient *http.Client) Option {
 	return func(client *Client) {
 		if httpClient != nil {
@@ -56,6 +59,7 @@ func WithHTTPClient(httpClient *http.Client) Option {
 	}
 }
 
+// WithHeader adds or replaces a request header for every call.
 func WithHeader(key, value string) Option {
 	return func(client *Client) {
 		if strings.TrimSpace(key) != "" {
@@ -64,6 +68,45 @@ func WithHeader(key, value string) Option {
 	}
 }
 
+// WithTimeout configures the default HTTP client timeout.
+func WithTimeout(timeout time.Duration) Option {
+	return func(client *Client) {
+		if timeout > 0 && client.httpClient != nil {
+			client.httpClient.Timeout = timeout
+		}
+	}
+}
+
+// WithBearerToken sends an Authorization bearer token in every request.
+func WithBearerToken(token string) Option {
+	return func(client *Client) {
+		token = strings.TrimSpace(token)
+		if token != "" {
+			client.headers.Set("Authorization", "Bearer "+token)
+		}
+	}
+}
+
+// BaseURL returns the client's effective base URL.
+func (c *Client) BaseURL() string {
+	if c == nil {
+		return ""
+	}
+
+	return c.baseURL
+}
+
+// Health checks whether the microservice is reachable.
+func (c *Client) Health(ctx context.Context) (*Health, error) {
+	var envelope Response[Health]
+	if err := c.get(ctx, "/healthz", &envelope); err != nil {
+		return nil, err
+	}
+
+	return &envelope.Data, nil
+}
+
+// GetPersonByDNI fetches a person by DNI.
 func (c *Client) GetPersonByDNI(ctx context.Context, dni string) (*Person, error) {
 	var envelope Response[Person]
 	if err := c.get(ctx, "/api/v1/persons/"+strings.TrimSpace(dni), &envelope); err != nil {
@@ -73,6 +116,7 @@ func (c *Client) GetPersonByDNI(ctx context.Context, dni string) (*Person, error
 	return &envelope.Data, nil
 }
 
+// GetCompanyByRUC fetches a company by RUC.
 func (c *Client) GetCompanyByRUC(ctx context.Context, ruc string) (*Company, error) {
 	var envelope Response[Company]
 	if err := c.get(ctx, "/api/v1/companies/"+strings.TrimSpace(ruc), &envelope); err != nil {

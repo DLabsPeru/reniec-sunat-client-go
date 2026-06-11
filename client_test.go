@@ -5,7 +5,30 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
+
+func TestHealth(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/healthz" {
+			t.Fatalf("unexpected path: %s", r.URL.Path)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"success":true,"statusCode":200,"message":"ok","data":{"status":"ok"},"path":"` + r.URL.Path + `","timestamp":"2026-06-11T00:00:00Z"}`))
+	}))
+	defer server.Close()
+
+	client := NewWithBaseURL(server.URL, WithTimeout(5*time.Second))
+	health, err := client.Health(context.Background())
+	if err != nil {
+		t.Fatalf("Health returned error: %v", err)
+	}
+
+	if health.Status != "ok" {
+		t.Fatalf("unexpected health status: %s", health.Status)
+	}
+}
 
 func TestGetPersonByDNI(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -19,6 +19,10 @@ type ErrorDetail struct {
 	Message string `json:"message"`
 }
 
+type Health struct {
+	Status string `json:"status"`
+}
+
 type Person struct {
 	DNI              string     `json:"dni"`
 	FirstNames       string     `json:"firstNames"`

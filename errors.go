@@ -21,3 +21,15 @@ func (e *Error) Error() string {
 
 	return e.Message
 }
+
+func (e *Error) IsNotFound() bool {
+	return e != nil && e.StatusCode == 404
+}
+
+func (e *Error) IsBadRequest() bool {
+	return e != nil && e.StatusCode == 400
+}
+
+func (e *Error) IsBadGateway() bool {
+	return e != nil && e.StatusCode == 502
+}

@@ -1,4 +1,4 @@
-# reniec-sunat-client
+# reniec-sunat-client-go
 
 Cliente Go para consumir el microservicio `reniec-sunat`.
 
@@ -8,7 +8,7 @@ Cliente Go para consumir el microservicio `reniec-sunat`.
 go get github.com/Destiny-Peru/reniec-sunat-client-go
 ```
 
-## Uso
+## Uso rapido
 
 ```go
 package main
@@ -16,12 +16,21 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	reniecsunatclient "github.com/Destiny-Peru/reniec-sunat-client-go"
 )
 
 func main() {
-	client := reniecsunatclient.New()
+	client := reniecsunatclient.New(
+		reniecsunatclient.WithTimeout(15*time.Second),
+	)
+
+	health, err := client.Health(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("health:", health.Status)
 
 	person, err := client.GetPersonByDNI(context.Background(), "71101328")
 	if err != nil {
@@ -43,3 +52,40 @@ Si necesitas otro ambiente, puedes sobreescribir la URL:
 ```go
 client := reniecsunatclient.NewWithBaseURL("http://localhost:8080")
 ```
+
+## Opciones utiles
+
+```go
+client := reniecsunatclient.New(
+    reniecsunatclient.WithTimeout(10*time.Second),
+    reniecsunatclient.WithHeader("X-Request-ID", "demo-123"),
+)
+```
+
+Si luego el microservicio requiere autenticacion:
+
+```go
+client := reniecsunatclient.New(
+    reniecsunatclient.WithBearerToken("tu-token"),
+)
+```
+
+## Manejo de errores
+
+```go
+company, err := client.GetCompanyByRUC(ctx, "00000000000")
+if err != nil {
+    if apiErr, ok := err.(*reniecsunatclient.Error); ok {
+        if apiErr.IsNotFound() {
+            log.Println("empresa no encontrada")
+        }
+        log.Println(apiErr.StatusCode, apiErr.Code, apiErr.Message)
+    }
+}
+```
+
+## Metodos disponibles
+
+- `Health(ctx)`
+- `GetPersonByDNI(ctx, dni)`
+- `GetCompanyByRUC(ctx, ruc)`
