@@ -5,7 +5,7 @@ Cliente Go para consumir el microservicio `reniec-sunat`.
 ## Instalacion
 
 ```bash
-go get github.com/Destiny-Peru/reniec-sunat/reniec-sunat-client
+go get github.com/Destiny-Peru/reniec-sunat-client-go
 ```
 
 ## Uso
@@ -17,11 +17,11 @@ import (
 	"context"
 	"log"
 
-	reniecsunatclient "github.com/Destiny-Peru/reniec-sunat/reniec-sunat-client"
+	reniecsunatclient "github.com/Destiny-Peru/reniec-sunat-client-go"
 )
 
 func main() {
-	client := reniecsunatclient.New("https://api-reniec-sunat.destiny-peru.com")
+	client := reniecsunatclient.New()
 
 	person, err := client.GetPersonByDNI(context.Background(), "71101328")
 	if err != nil {
@@ -36,4 +36,10 @@ func main() {
 	log.Println(person.FirstNames, person.LastNames)
 	log.Println(company.BusinessName)
 }
+```
+
+Si necesitas otro ambiente, puedes sobreescribir la URL:
+
+```go
+client := reniecsunatclient.NewWithBaseURL("http://localhost:8080")
 ```
